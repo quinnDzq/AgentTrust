@@ -9,8 +9,8 @@ The default identity is an enrolled Ed25519 public key. ERC-8004 testnet registr
 Use the shared Sandbox app settings with `cp .env.sandbox .env`. To use your own Sandbox app, copy `.env.example` to `.env` and follow these steps.
 
 1. In the PayPal Developer Dashboard, select **Sandbox**, then open **Apps & Credentials**. Choose or create a REST app for a Sandbox **Business** account and enable payment acceptance and Vault. Copy the app’s **Client ID** and **Client Secret** into `PAYPAL_SANDBOX_CLIENT_ID` and `PAYPAL_SANDBOX_CLIENT_SECRET` in your local `.env`. [PayPal Vault setup](https://developer.paypal.com/api/payment-tokens/save-without-purchase/paypal)
-2. In **Testing Tools → Sandbox Accounts**, create or choose a **Personal** Sandbox account. Use its email and password in the PayPal authorization window after clicking **Connect PayPal Sandbox**. [PayPal Sandbox accounts](https://developer.paypal.com/sandbox-testing/accounts)
-3. For a hosted instance, configure the two REST app values as server secrets. Keep the buyer login with the people authorized to use it. The tracked `.env.example` contains the configuration names.
+2. Click **Connect PayPal Sandbox** and sign in on PayPal with the shared **Personal** buyer listed in [`.env.sandbox`](.env.sandbox). You can also create your own Personal buyer under **Testing Tools → Sandbox Accounts**. [PayPal Sandbox accounts](https://developer.paypal.com/sandbox-testing/accounts)
+3. For a hosted instance, set the two REST app values in the server environment. Enter the buyer login directly on PayPal.
 
 ## Run locally
 
