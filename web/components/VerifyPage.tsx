@@ -24,6 +24,7 @@ export function VerifyPage({ view }: { readonly view: 'wallet' | 'verification' 
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [proof, setProof] = useState<IdentityProofView | null>(null);
+  const [resetRequested, setResetRequested] = useState(false);
 
   const act = async (run: () => Promise<Ack>): Promise<void> => {
     setBusy(true);
@@ -75,7 +76,7 @@ export function VerifyPage({ view }: { readonly view: 'wallet' | 'verification' 
 
     return (
       <div className="vp-page">
-        <TopBar view={view} wallet={null} grant={null} />
+        <TopBar wallet={null} grant={null} />
         <main className="vp-main lv-main">
           <h1 className="vp-title">{heading}</h1>
           <p className="vp-status" role="status">{status}</p>
@@ -91,20 +92,50 @@ export function VerifyPage({ view }: { readonly view: 'wallet' | 'verification' 
     onApprove: (amount: number, askPct: number) => void act(() => api.approve(amount, askPct)),
     onBudget: (amount: number, askPct: number) => void act(() => api.setBudget(amount, askPct)),
   };
+  const identityCard = (
+    <IdentityCard
+      enrollment={enrollment}
+      busy={busy || offline}
+      onEnroll={() => void act(api.enroll)}
+      onProve={() =>
+        void act(async () => {
+          const result = await api.proveIdentity();
+          if (result.nonce && result.signature && result.fingerprint && typeof result.verified === 'boolean') {
+            setProof({
+              nonce: result.nonce,
+              signature: result.signature,
+              verified: result.verified,
+              result: result.result ?? (result.verified ? 'verified' : 'not verified'),
+              fingerprint: result.fingerprint,
+            });
+          }
+          return result;
+        })
+      }
+      proof={proof}
+    />
+  );
   const latestPayment = walletPage && live ? { quote: live.quote, stamp: stampOf(live.stage) } : null;
+
+  const resetSession = () => {
+    setResetRequested(false);
+    void act(async () => {
+      const result = await api.reset();
+      setProof(null);
+      return result;
+    });
+  };
 
   return (
     <div className="vp-page">
       <TopBar
-        view={view}
         wallet={wallet}
         grant={grant}
         busy={busy}
-        onReset={() => void act(async () => {
-          const result = await api.reset();
-          setProof(null);
-          return result;
-        })}
+        onReset={() => {
+          if (live || proof || wallet.state === 'connected') setResetRequested(true);
+          else resetSession();
+        }}
       />
 
       <main className="vp-main lv-main">
@@ -113,33 +144,36 @@ export function VerifyPage({ view }: { readonly view: 'wallet' | 'verification' 
           {offline ? 'Lost the AgentTrust server. Retrying…' : (message ?? '')}
         </p>
 
-        {walletPage ? (
-          <Setup wallet={wallet} grant={grant} showConnected {...setupActions} />
-        ) : (
-          <Preflight snap={snap} preflight={preflight} {...setupActions} />
+        {resetRequested && (
+          <section className="lv-proof" aria-label="Confirm session reset">
+            <p className="lv-proof-result">Reset this session?</p>
+            <p className="lv-proof-note">This clears the payment result and identity proof and resets the spending grant.</p>
+            <div className="vp-step-row">
+              <button type="button" className="vp-btn vp-btn-ghost" onClick={() => setResetRequested(false)}>
+                Cancel
+              </button>
+              <button type="button" className="vp-btn vp-btn-gold" onClick={resetSession} disabled={busy || offline}>
+                Reset session
+              </button>
+            </div>
+          </section>
         )}
 
-        <IdentityCard
-          enrollment={enrollment}
-          busy={busy || offline}
-          onEnroll={() => void act(api.enroll)}
-          onProve={() =>
-            void act(async () => {
-              const result = await api.proveIdentity();
-              if (result.nonce && result.signature && result.fingerprint && typeof result.verified === 'boolean') {
-                setProof({
-                  nonce: result.nonce,
-                  signature: result.signature,
-                  verified: result.verified,
-                  result: result.result ?? (result.verified ? 'verified' : 'not verified'),
-                  fingerprint: result.fingerprint,
-                });
-              }
-              return result;
-            })
-          }
-          proof={proof}
-        />
+        {!walletPage && (
+          <p><a className="vp-top-link" href="/verify/paypal/board/">Open Live Wallet</a></p>
+        )}
+
+        {walletPage ? (
+          <>
+            {identityCard}
+            <Setup wallet={wallet} grant={grant} showConnected {...setupActions} />
+          </>
+        ) : (
+          <>
+            <Preflight snap={snap} preflight={preflight} {...setupActions} />
+            {identityCard}
+          </>
+        )}
 
         <BudgetRequest
           grant={grant}

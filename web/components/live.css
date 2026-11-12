@@ -562,8 +562,6 @@
 /* ---------- Layer 2, opened up ---------- */
 
 .lv-identity {
-  display: grid;
-  gap: 12px;
   margin: 0 0 18px;
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -574,9 +572,33 @@
 .lv-identity-head {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   gap: 8px;
   align-items: baseline;
+  cursor: pointer;
+  list-style: none;
+}
+
+.lv-identity-head::-webkit-details-marker {
+  display: none;
+}
+
+.lv-identity-head::before {
+  content: '▸';
+  color: var(--gold);
+}
+
+.lv-identity[open] .lv-identity-head::before {
+  content: '▾';
+}
+
+.lv-identity-head .vp-label {
+  margin-right: auto;
+}
+
+.lv-identity-body {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
 }
 
 .lv-identity-mode {

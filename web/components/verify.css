@@ -51,12 +51,6 @@
   text-decoration: none;
 }
 
-.vp-top-pages {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
 .vp-top-chips {
   display: flex;
   flex-wrap: wrap;
@@ -86,8 +80,7 @@
   text-decoration: none;
 }
 
-.vp-top-link:hover,
-.vp-top-link[aria-current="page"] {
+.vp-top-link:hover {
   text-decoration: underline;
 }
 

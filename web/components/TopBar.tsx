@@ -2,13 +2,11 @@ import { fmtMoney, type GrantView, type WalletView } from '@app/types.ts';
 import { Tag } from './Tag';
 
 export function TopBar({
-  view,
   wallet,
   grant,
   busy = false,
   onReset,
 }: {
-  readonly view: 'wallet' | 'verification';
   readonly wallet: WalletView | null;
   readonly grant: GrantView | null;
   readonly busy?: boolean;
@@ -20,15 +18,7 @@ export function TopBar({
       <a className="vp-brand" href="/verify/">
         AGENTTRUST
       </a>
-      <div className="vp-top-pages">
-        <a className="vp-top-link" href="/verify/">Home</a>
-        <a className="vp-top-link" href="/verify/paypal/board/" aria-current={view === 'wallet' ? 'page' : undefined}>
-          Live Wallet
-        </a>
-        <a className="vp-top-link" href="/verify/paypal/" aria-current={view === 'verification' ? 'page' : undefined}>
-          Live verification
-        </a>
-      </div>
+      <a className="vp-top-link" href="/verify/">Home</a>
       <div className="vp-top-chips">
         {wallet ? (
           <span className="vp-chip" data-ok={connected ? 'yes' : 'no'}>
