@@ -6,6 +6,8 @@ The default identity is an enrolled Ed25519 public key. ERC-8004 testnet registr
 
 ## Set up PayPal Sandbox
 
+Use the shared Sandbox app settings with `cp .env.sandbox .env`. To use your own Sandbox app, copy `.env.example` to `.env` and follow these steps.
+
 1. In the PayPal Developer Dashboard, select **Sandbox**, then open **Apps & Credentials**. Choose or create a REST app for a Sandbox **Business** account and enable payment acceptance and Vault. Copy the app’s **Client ID** and **Client Secret** into `PAYPAL_SANDBOX_CLIENT_ID` and `PAYPAL_SANDBOX_CLIENT_SECRET` in your local `.env`. [PayPal Vault setup](https://developer.paypal.com/api/payment-tokens/save-without-purchase/paypal)
 2. In **Testing Tools → Sandbox Accounts**, create or choose a **Personal** Sandbox account. Use its email and password in the PayPal authorization window after clicking **Connect PayPal Sandbox**. [PayPal Sandbox accounts](https://developer.paypal.com/sandbox-testing/accounts)
 3. For a hosted instance, configure the two REST app values as server secrets. Keep the buyer login with the people authorized to use it. The tracked `.env.example` contains the configuration names.
@@ -17,12 +19,12 @@ Install Bun and Node.js. The web build downloads its fonts from Google Fonts.
 Run these commands from the repository root.
 
 ```sh
-cp .env.example .env
+cp .env.sandbox .env
 (cd app && bun install --frozen-lockfile)
 (cd web && bun install --frozen-lockfile && bun run build)
 ```
 
-Fill in `.env`, then start the signer and the app in separate terminals.
+After setting up `.env`, start the signer and the app in separate terminals.
 
 ```sh
 cd app && bun run signer
