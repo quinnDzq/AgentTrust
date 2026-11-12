@@ -37,10 +37,12 @@ export function Setup({
   onCheck,
   onApprove,
   onBudget,
+  showConnected = false,
 }: {
   readonly wallet: WalletView;
   readonly grant: GrantView;
   readonly busy: boolean;
+  readonly showConnected?: boolean;
   readonly onConnect: () => void;
   readonly onCheck: () => void;
   /** Approve the grant at this amount, in US dollars, with this ask threshold. */
@@ -91,17 +93,17 @@ export function Setup({
 
   if (grant.status === 'revoked') {
     return (
-      <section className="vp-setup" aria-label="Before the test requests">
+      <section className="vp-setup" aria-label="Wallet and spending grant">
         <p className="vp-setup-line">
           <Tag kind="local" /> The buyer revoked the {grant.registryId} key. Every request now fails identity.
         </p>
       </section>
     );
   }
-  if (connected && grant.status === 'active') return null;
+  if (!showConnected && connected && grant.status === 'active') return null;
 
   return (
-    <section className="vp-setup" aria-label="Before the test requests">
+    <section className="vp-setup" aria-label="Wallet and spending grant">
       <div className="vp-step" data-done={connected ? 'yes' : 'no'}>
         <span className="vp-step-n">{connected ? '✓' : '1'}</span>
         <div className="vp-step-body">
@@ -151,21 +153,83 @@ export function Setup({
             {grant.registryId} may pay {grant.merchant} up to {fmtMoney(buttonAmount)}, {grant.until}. A purchase over{' '}
             {shownPct ?? grant.askThresholdPct}% of that asks you first. Asked again every run.
           </p>
-          <div className="vp-step-row">
-            <label className="vp-budget">
-              USD
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0.01}
-                max={10000}
-                step={0.01}
-                aria-label="Budget in US dollars"
-                value={draft}
-                disabled={busy || !editable}
-                onFocus={() => setFocused(true)}
-                onBlur={() => {
-                  setFocused(false);
+          {grant.status === 'active' ? (
+            <p className="vp-step-note">{fmtMoney(grant.left)} of {fmtMoney(grant.budget)} left.</p>
+          ) : (
+            <div className="vp-step-row">
+              <label className="vp-budget">
+                USD
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={0.01}
+                  max={10000}
+                  step={0.01}
+                  aria-label="Budget in US dollars"
+                  value={draft}
+                  disabled={busy || !editable}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => {
+                    setFocused(false);
+                    const amount = dollarsOf(draft);
+                    const pct = percentOf(pctDraft);
+                    if (amount === null) {
+                      setError('Enter a budget greater than zero.');
+                      return;
+                    }
+                    if (pct === null) {
+                      setError('Enter an ask threshold from 0 to 100.');
+                      return;
+                    }
+                    setError(null);
+                    if (Math.round(amount * 100) !== grant.budget || pct !== grant.askThresholdPct) onBudget(amount, pct);
+                  }}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    setError(null);
+                    scheduleSave(event.target.value, pctDraft);
+                  }}
+                />
+              </label>
+              <label className="vp-budget vp-budget-pct">
+                Ask above
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={100}
+                  step={1}
+                  aria-label="Ask threshold as a percent of the budget"
+                  value={pctDraft}
+                  disabled={busy || !editable}
+                  onFocus={() => setPctFocused(true)}
+                  onBlur={() => {
+                    setPctFocused(false);
+                    const amount = dollarsOf(draft);
+                    const pct = percentOf(pctDraft);
+                    if (pct === null) {
+                      setError('Enter an ask threshold from 0 to 100.');
+                      return;
+                    }
+                    if (amount === null) {
+                      setError('Enter a budget greater than zero.');
+                      return;
+                    }
+                    setError(null);
+                    if (Math.round(amount * 100) !== grant.budget || pct !== grant.askThresholdPct) onBudget(amount, pct);
+                  }}
+                  onChange={(event) => {
+                    setPctDraft(event.target.value);
+                    setError(null);
+                    scheduleSave(draft, event.target.value);
+                  }}
+                />
+                %
+              </label>
+              <button
+                type="button"
+                className="vp-btn vp-btn-gold"
+                onClick={() => {
                   const amount = dollarsOf(draft);
                   const pct = percentOf(pctDraft);
                   if (amount === null) {
@@ -177,73 +241,15 @@ export function Setup({
                     return;
                   }
                   setError(null);
-                  if (Math.round(amount * 100) !== grant.budget || pct !== grant.askThresholdPct) onBudget(amount, pct);
+                  if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
+                  onApprove(amount, pct);
                 }}
-                onChange={(event) => {
-                  setDraft(event.target.value);
-                  setError(null);
-                  scheduleSave(event.target.value, pctDraft);
-                }}
-              />
-            </label>
-            <label className="vp-budget vp-budget-pct">
-              Ask above
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={100}
-                step={1}
-                aria-label="Ask threshold as a percent of the budget"
-                value={pctDraft}
-                disabled={busy || !editable}
-                onFocus={() => setPctFocused(true)}
-                onBlur={() => {
-                  setPctFocused(false);
-                  const amount = dollarsOf(draft);
-                  const pct = percentOf(pctDraft);
-                  if (pct === null) {
-                    setError('Enter an ask threshold from 0 to 100.');
-                    return;
-                  }
-                  if (amount === null) {
-                    setError('Enter a budget greater than zero.');
-                    return;
-                  }
-                  setError(null);
-                  if (Math.round(amount * 100) !== grant.budget || pct !== grant.askThresholdPct) onBudget(amount, pct);
-                }}
-                onChange={(event) => {
-                  setPctDraft(event.target.value);
-                  setError(null);
-                  scheduleSave(draft, event.target.value);
-                }}
-              />
-              %
-            </label>
-            <button
-              type="button"
-              className="vp-btn vp-btn-gold"
-              onClick={() => {
-                const amount = dollarsOf(draft);
-                const pct = percentOf(pctDraft);
-                if (amount === null) {
-                  setError('Enter a budget greater than zero.');
-                  return;
-                }
-                if (pct === null) {
-                  setError('Enter an ask threshold from 0 to 100.');
-                  return;
-                }
-                setError(null);
-                if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
-                onApprove(amount, pct);
-              }}
-              disabled={busy || grant.status !== 'needs_approval'}
-            >
-              Allow Deck Agent to spend up to {fmtMoney(buttonAmount)}
-            </button>
-          </div>
+                disabled={busy || grant.status !== 'needs_approval'}
+              >
+                Allow Deck Agent to spend up to {fmtMoney(buttonAmount)}
+              </button>
+            </div>
+          )}
           {error ? <p className="vp-step-note">{error}</p> : null}
         </div>
       </div>

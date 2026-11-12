@@ -2,26 +2,33 @@ import { fmtMoney, type GrantView, type WalletView } from '@app/types.ts';
 import { Tag } from './Tag';
 
 export function TopBar({
-  page,
+  view,
   wallet,
   grant,
-  busy,
+  busy = false,
   onReset,
 }: {
-  /** What this page is, beside the wordmark. */
-  readonly page: string;
+  readonly view: 'wallet' | 'verification';
   readonly wallet: WalletView | null;
   readonly grant: GrantView | null;
-  readonly busy: boolean;
-  readonly onReset: () => void;
+  readonly busy?: boolean;
+  readonly onReset?: () => void;
 }) {
   const connected = wallet?.state === 'connected';
   return (
     <nav className="vp-top" aria-label="AgentTrust">
-      <a className="vp-brand" href="/verify/paypal/">
+      <a className="vp-brand" href="/verify/">
         AGENTTRUST
       </a>
-      <span className="vp-top-page">{page}</span>
+      <div className="vp-top-pages">
+        <a className="vp-top-link" href="/verify/">Home</a>
+        <a className="vp-top-link" href="/verify/paypal/board/" aria-current={view === 'wallet' ? 'page' : undefined}>
+          Live Wallet
+        </a>
+        <a className="vp-top-link" href="/verify/paypal/" aria-current={view === 'verification' ? 'page' : undefined}>
+          Live verification
+        </a>
+      </div>
       <div className="vp-top-chips">
         {wallet ? (
           <span className="vp-chip" data-ok={connected ? 'yes' : 'no'}>
@@ -39,9 +46,11 @@ export function TopBar({
             <Tag kind="local" />
           </span>
         ) : null}
-        <button type="button" className="vp-btn vp-btn-ghost vp-btn-small" onClick={onReset} disabled={busy}>
-          Reset
-        </button>
+        {onReset && (
+          <button type="button" className="vp-btn vp-btn-ghost vp-btn-small" onClick={onReset} disabled={busy}>
+            Reset
+          </button>
+        )}
       </div>
     </nav>
   );

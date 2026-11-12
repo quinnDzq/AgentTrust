@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function PayPalPage() {
-  return <VerifyPage />;
+  return <VerifyPage view="verification" />;
 }

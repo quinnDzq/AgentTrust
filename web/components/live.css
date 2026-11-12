@@ -118,6 +118,30 @@
   color: var(--error);
 }
 
+.lv-icon {
+  flex: none;
+}
+
+.lv-waiting,
+.lv-wallet-payment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-raised);
+}
+
+.lv-waiting p,
+.lv-wallet-payment p {
+  margin: 0;
+}
+
+.lv-wallet-payment:hover {
+  border-color: var(--gold);
+}
+
 /* ---------- The run ---------- */
 
 .lv-run {

@@ -1,29 +1,25 @@
 'use client';
 
+import { fmtUsd } from '@app/types.ts';
 import { useState } from 'react';
 import { api, type Ack } from '@/lib/api';
-import { preflightOf } from '@/lib/live';
+import { preflightOf, stampOf } from '@/lib/live';
 import { useSnapshot } from '@/lib/useSnapshot';
 import { BudgetRequest } from './BudgetRequest';
 import { IdentityCard, type IdentityProofView } from './IdentityCard';
 import { LiveRun } from './LiveRun';
+import { Sprite } from './Sprite';
 import { Preflight } from './Preflight';
+import { Setup } from './Setup';
 import { Tag } from './Tag';
 import { TopBar } from './TopBar';
 import './verify.css';
 import './live.css';
 
-/**
- * The live payment verification view.
- *
- * It has a preflight — PayPal's consent, the buyer's grant, the agent's
- * enrollment — and after that the only control is Approve or Decline, when a
- * purchase is over the ask threshold. The request comes in through the
- * connector, and everything drawn below the preflight is the server's own
- * record of the run: the numeric challenge and the reply as it arrived, the
- * certificate, one authorization line, and the receipt.
- */
-export function VerifyPage() {
+/** The wallet and verification views share the buyer's payment session. */
+export function VerifyPage({ view }: { readonly view: 'wallet' | 'verification' }) {
+  const walletPage = view === 'wallet';
+  const heading = walletPage ? 'Live Wallet' : 'Incoming payment';
   const { snap, offline, refresh } = useSnapshot();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -70,30 +66,37 @@ export function VerifyPage() {
     }
   };
 
-  if (!snap) {
+  const { grant, wallet, enrollment, live } = snap ?? {};
+  const preflight = snap && preflightOf(snap);
+  if (!snap || !grant || !wallet || !enrollment || !preflight) {
+    let status = 'Loading…';
+    if (offline) status = 'Cannot reach the AgentTrust server. Start it with bun run dev in app/.';
+    else if (snap) status = 'Payment verification is unavailable. Check the AgentTrust server.';
+
     return (
-      <div className="vp-page vp-empty">
-        <p className="vp-label">AGENTTRUST</p>
-        <p>{offline ? 'Cannot reach the AgentTrust server. Start it with `bun run dev` in app/.' : 'Loading…'}</p>
+      <div className="vp-page">
+        <TopBar view={view} wallet={null} grant={null} />
+        <main className="vp-main lv-main">
+          <h1 className="vp-title">{heading}</h1>
+          <p className="vp-status" role="status">{status}</p>
+        </main>
       </div>
     );
   }
 
-  const { grant, wallet, enrollment, live } = snap;
-  const preflight = preflightOf(snap);
-  if (!grant || !wallet || !enrollment || !preflight) {
-    return (
-      <div className="vp-page vp-empty">
-        <p className="vp-label">AGENTTRUST</p>
-        <p>Payment verification is unavailable. Check the AgentTrust server.</p>
-      </div>
-    );
-  }
+  const setupActions = {
+    busy: busy || offline,
+    onConnect: () => void connect(),
+    onCheck: () => void act(api.check),
+    onApprove: (amount: number, askPct: number) => void act(() => api.approve(amount, askPct)),
+    onBudget: (amount: number, askPct: number) => void act(() => api.setBudget(amount, askPct)),
+  };
+  const latestPayment = walletPage && live ? { quote: live.quote, stamp: stampOf(live.stage) } : null;
 
   return (
     <div className="vp-page">
       <TopBar
-        page="Live verification"
+        view={view}
         wallet={wallet}
         grant={grant}
         busy={busy}
@@ -105,17 +108,16 @@ export function VerifyPage() {
       />
 
       <main className="vp-main lv-main">
-        <h1 className="vp-title">Incoming payment</h1>
+        <h1 className="vp-title">{heading}</h1>
+        <p className="vp-status" role="status" aria-live="polite">
+          {offline ? 'Lost the AgentTrust server. Retrying…' : (message ?? '')}
+        </p>
 
-        <Preflight
-          snap={snap}
-          preflight={preflight}
-          busy={busy || offline}
-          onConnect={() => void connect()}
-          onCheck={() => void act(api.check)}
-          onApprove={(amount, askPct) => void act(() => api.approve(amount, askPct))}
-          onBudget={(amount, askPct) => void act(() => api.setBudget(amount, askPct))}
-        />
+        {walletPage ? (
+          <Setup wallet={wallet} grant={grant} showConnected {...setupActions} />
+        ) : (
+          <Preflight snap={snap} preflight={preflight} {...setupActions} />
+        )}
 
         <IdentityCard
           enrollment={enrollment}
@@ -145,7 +147,18 @@ export function VerifyPage() {
           onDecide={(requestId, choice) => void act(() => api.decideBudget(requestId, choice))}
         />
 
-        {live ? (
+        {latestPayment && (
+          <a className="lv-wallet-payment" href="/verify/paypal/">
+            <Sprite who="pip" size={40} decorative className="lv-icon" />
+            <div className="lv-request-body">
+              <p className="vp-label">Latest payment</p>
+              <p>{latestPayment.quote.item} · {fmtUsd(latestPayment.quote.amount)}</p>
+            </div>
+            <span className={`vp-stamp vp-stamp-${latestPayment.stamp.tone}`}>{latestPayment.stamp.word}</span>
+          </a>
+        )}
+
+        {!walletPage && (live ? (
           <LiveRun
             key={live.runId}
             run={live}
@@ -155,12 +168,11 @@ export function VerifyPage() {
             onDecide={(choice) => void act(() => api.decide(live.runId, choice))}
           />
         ) : (
-          <p className="lv-muted" role="status">Waiting for a payment request.</p>
-        )}
-
-        <p className="vp-status" role="status" aria-live="polite">
-          {offline ? 'Lost the AgentTrust server. Retrying…' : (message ?? '')}
-        </p>
+          <div className="lv-waiting" role="status">
+            <Sprite who="pip" size={40} decorative className="lv-icon" />
+            <p>Waiting for a payment request.</p>
+          </div>
+        ))}
       </main>
 
       <footer className="vp-honesty">

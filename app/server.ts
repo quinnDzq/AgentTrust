@@ -157,6 +157,8 @@ function readAskPct(value: unknown):
 
 /* ---------- the exported verification page ---------- */
 
+const HOME_URL = '/verify/';
+const WALLET_URL = '/verify/paypal/board/';
 const VERIFY_URL = '/verify/paypal/';
 const VERIFY_DIR = join(import.meta.dir, '..', 'web', 'out');
 
@@ -181,7 +183,12 @@ async function verifyPage(pathname: string): Promise<Response> {
   }
   // Only files inside the export, whatever the path says.
   const target = normalize(join(VERIFY_DIR, rest));
-  const section = join(VERIFY_DIR, rest.startsWith('_next/static/') ? '_next/static' : 'paypal');
+  const page = pathname.startsWith(WALLET_URL)
+    ? 'paypal/board'
+    : pathname.startsWith(VERIFY_URL)
+      ? 'paypal'
+      : '';
+  const section = join(VERIFY_DIR, pathname.startsWith('/verify/_next/static/') ? '_next/static' : page);
   if (target !== section && !target.startsWith(section + sep)) {
     return new Response('Not found', { status: 404 });
   }
@@ -198,7 +205,7 @@ async function verifyPage(pathname: string): Promise<Response> {
     });
   }
 
-  if (!(await Bun.file(join(VERIFY_DIR, 'paypal', 'index.html')).exists())) {
+  if (!(await Bun.file(join(VERIFY_DIR, page, 'index.html')).exists())) {
     return new Response('Build the verification page with bun run build in web/.', { status: 503 });
   }
   return new Response('Not found', { status: 404 });
@@ -217,7 +224,7 @@ const returnPage = (title: string, body: string): Response =>
       '<style>body{font-family:system-ui,sans-serif;background:#15121B;color:#F4ECD8;display:grid;' +
       'place-items:center;min-height:100vh;margin:0}main{max-width:30rem;padding:2rem;text-align:center}' +
       'a{color:#E8B64A}</style></head><body><main>' +
-      `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(body)}</p><p><a href="${VERIFY_URL}">Back to AgentTrust</a></p>` +
+      `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(body)}</p><p><a href="${WALLET_URL}">Back to Live Wallet</a></p>` +
       '</main><script>setTimeout(function(){try{window.close()}catch(e){}},1500)</script></body></html>',
     { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } },
   );
@@ -236,12 +243,17 @@ async function route(req: Request, url: URL): Promise<Response> {
   }
 
   if (method === 'GET') {
-    if (pathname === '/' || pathname === '/verify/paypal') {
+    if (pathname === '/' || pathname === '/verify') {
+      return new Response(null, { status: 308, headers: { location: HOME_URL } });
+    }
+    if (pathname === '/verify/paypal/board') {
+      return new Response(null, { status: 308, headers: { location: WALLET_URL } });
+    }
+    if (pathname === '/verify/paypal') {
       return new Response(null, { status: 308, headers: { location: VERIFY_URL } });
     }
     if (
-      pathname === VERIFY_URL ||
-      /^\/verify\/paypal\/(?:index\.html|(?:index|__next[^/]+)\.txt)$/.test(pathname) ||
+      /^\/verify\/(?:paypal\/(?:board\/)?)?(?:index\.html|(?:index|__next[^/]+)\.txt)?$/.test(pathname) ||
       pathname.startsWith('/verify/_next/static/')
     ) {
       return verifyPage(pathname);
@@ -430,7 +442,9 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 console.log(
-  `AgentTrust → http://localhost:${PORT}${VERIFY_URL}` +
+  `AgentTrust → http://localhost:${PORT}${HOME_URL}` +
+    `\n  Live Wallet → http://localhost:${PORT}${WALLET_URL}` +
+    `\n  Live verification → http://localhost:${PORT}${VERIFY_URL}` +
     `\n  PayPal Sandbox: ${paypal ? 'configured' : 'not configured — set the Sandbox app credentials before connecting a wallet'}` +
     `\n  PayPal return URLs → ${PUBLIC_BASE}/paypal/approved/…` +
     (paypal ? `\n  Wallet: ${describeCandidates(candidates)} to check with PayPal` : '') +

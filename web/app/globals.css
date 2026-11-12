@@ -31,6 +31,11 @@
   --paper-pending: #2c5c9c;
   --paper-gold: #7b5a10;
 
+  --plank: #8a6440;
+  --plank-2: #6f4f31;
+  --wall: #3e3548;
+  --wall-2: #2a2331;
+
   /* Kept under their old names for the pixel pieces the PayPal page still draws. */
   --px-screen: var(--screen);
   --px-line: var(--line);

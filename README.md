@@ -4,12 +4,25 @@ AgentTrust checks an AI agent’s identity and spending authorization before it 
 
 The default identity is an enrolled Ed25519 public key. ERC-8004 testnet registration is optional. The connector uses a numeric challenge and a bank of reference replies to decide whether to offer a signing challenge.
 
+## Pages
+
+| Page | Local URL | What it does |
+| --- | --- | --- |
+| Verify a payment | [`/verify/`](http://localhost:8787/verify/) | The homepage. Choose a simulated wallet and follow a browser payment request through the model signal, registered key and spending authorization. **Live view** opens the MCP-driven verification page. |
+| Live verification | [`/verify/paypal/`](http://localhost:8787/verify/paypal/) | Follow an MCP payment request through the three checks, approve a purchase if prompted and inspect the PayPal Sandbox receipt. **Home** returns to the wallet simulation. |
+| Live Wallet | [`/verify/paypal/board/`](http://localhost:8787/verify/paypal/board/) | Connect a PayPal Sandbox wallet, approve a budget, enroll the agent and open the latest payment. **Reset** clears the current session so the buyer can approve a new budget. |
+
 ## Set up PayPal Sandbox
 
-Use the shared Sandbox app settings with `cp .env.sandbox .env`. To use your own Sandbox app, copy `.env.example` to `.env` and follow these steps.
+Copy [`.env.sandbox`](.env.sandbox) to `.env` to use the shared Sandbox app. Click **Connect PayPal Sandbox** on the Live Wallet page, then enter the shared **Personal Sandbox** buyer credentials in PayPal’s authorization window.
+
+- **Email** `sb-hp7u553807339@personal.example.com`
+- **Password** `Gyj|&C7N`
+
+Sandbox payments use test funds. To use your own Sandbox app, copy `.env.example` to `.env` and follow these steps.
 
 1. In the PayPal Developer Dashboard, select **Sandbox**, then open **Apps & Credentials**. Choose or create a REST app for a Sandbox **Business** account and enable payment acceptance and Vault. Copy the app’s **Client ID** and **Client Secret** into `PAYPAL_SANDBOX_CLIENT_ID` and `PAYPAL_SANDBOX_CLIENT_SECRET` in your local `.env`. [PayPal Vault setup](https://developer.paypal.com/api/payment-tokens/save-without-purchase/paypal)
-2. Click **Connect PayPal Sandbox** and sign in on PayPal with the shared **Personal** buyer listed in [`.env.sandbox`](.env.sandbox). You can also create your own Personal buyer under **Testing Tools → Sandbox Accounts**. [PayPal Sandbox accounts](https://developer.paypal.com/sandbox-testing/accounts)
+2. Create a **Personal** buyer under **Testing Tools → Sandbox Accounts**, then use that account in the PayPal authorization window. [PayPal Sandbox accounts](https://developer.paypal.com/sandbox-testing/accounts)
 3. For a hosted instance, set the two REST app values in the server environment. Enter the buyer login directly on PayPal.
 
 ## Run locally
@@ -34,7 +47,7 @@ cd app && bun run signer
 cd app && bun run dev
 ```
 
-Open [the verification page](http://localhost:8787/verify/paypal/). Connect the Sandbox wallet, approve the budget and enroll the agent. **Prove identity** verifies a fresh challenge using the enrolled key. Sandbox payments use test funds.
+Open [AgentTrust](http://localhost:8787/). In **Live Wallet**, connect the Sandbox wallet, approve a budget and enroll the agent. **Prove identity** verifies a fresh challenge using the enrolled key.
 
 ## Connect an agent
 

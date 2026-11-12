@@ -3,6 +3,7 @@
 import {
   fmtMoney,
   fmtUsd,
+  type AgentKey,
   type EnrollmentView,
   type GrantView,
   type LiveRunView,
@@ -23,6 +24,7 @@ import {
   type CertificateRow,
   type Mark,
 } from '@/lib/live';
+import { Sprite } from './Sprite';
 import { Tag, type TagKind } from './Tag';
 
 const MARK_WORD: { readonly [M in Mark]: string } = {
@@ -44,16 +46,19 @@ function MarkBadge({ mark }: { readonly mark: Mark }) {
 function LayerHead({
   n,
   title,
+  icon,
   mark,
   tag,
 }: {
   readonly n: number;
   readonly title: string;
+  readonly icon: AgentKey;
   readonly mark: Mark;
   readonly tag: TagKind;
 }) {
   return (
     <header className="lv-layer-head">
+      <Sprite who={icon} size={32} decorative className="lv-icon" />
       <span className="vp-row-n">Layer {n}</span>
       <h3 className="lv-layer-title">{title}</h3>
       <Tag kind={tag} />
@@ -154,6 +159,7 @@ export function LiveRun({
   return (
     <article className="lv-run" aria-label="Live verification run" aria-live="polite">
       <header className="lv-request">
+        <Sprite who="pip" size={48} decorative className="lv-icon" />
         <div className="lv-request-body">
           <p className="vp-label">
             {enrollment.agentName} requests · run {run.runId.slice(0, 8)}
@@ -169,7 +175,7 @@ export function LiveRun({
       </header>
 
       <section id="lv-layer-1" className="lv-layer" data-mark={model.mark} data-active={layer === 1 ? 'yes' : 'no'}>
-        <LayerHead n={1} title="Model signal" mark={model.mark} tag="local" />
+        <LayerHead n={1} title="Model signal" icon="mochi" mark={model.mark} tag="local" />
         <p className="lv-headline">{model.headline}</p>
 
         <dl className="lv-evidence">
@@ -227,7 +233,7 @@ export function LiveRun({
         data-mark={layerMark([registration, signature])}
         data-active={layer === 2 ? 'yes' : 'no'}
       >
-        <LayerHead n={2} title="Registered key" mark={layerMark([registration, signature])} tag="local" />
+        <LayerHead n={2} title="Registered key" icon="shield" mark={layerMark([registration, signature])} tag="local" />
         <div className="lv-certificate" data-sealed={registration.mark === 'pass' && signature.mark === 'pass' ? 'yes' : 'no'}>
           <p className="lv-certificate-title">Agent certificate · {enrollment.agentName}</p>
           <Certificate row={registration} tag={enrollment.identityMode === 'local' ? 'local' : 'testnet'} />
@@ -278,7 +284,7 @@ export function LiveRun({
       </section>
 
       <section id="lv-layer-3" className="lv-layer" data-mark={authorization.mark} data-active={layer === 3 ? 'yes' : 'no'}>
-        <LayerHead n={3} title="Payment authorization" mark={authorization.mark} tag="local" />
+        <LayerHead n={3} title="Payment authorization" icon="tally" mark={authorization.mark} tag="local" />
         <p className="lv-authorization">{authorization.line}</p>
         {overBudget ? <p className="lv-authorization">{overBudget}</p> : null}
         {run.stage === 'needs_buyer' && onDecide ? (
