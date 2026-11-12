@@ -6,7 +6,7 @@ import { preflightOf } from '@/lib/live';
 import { useSnapshot } from '@/lib/useSnapshot';
 import { BudgetRequest } from './BudgetRequest';
 import { IdentityCard, type IdentityProofView } from './IdentityCard';
-import { LiveRun, LiveWaiting } from './LiveRun';
+import { LiveRun } from './LiveRun';
 import { Preflight } from './Preflight';
 import { Tag } from './Tag';
 import { TopBar } from './TopBar';
@@ -79,7 +79,7 @@ export function VerifyPage() {
     );
   }
 
-  const { grant, wallet, enrollment, connector, live } = snap;
+  const { grant, wallet, enrollment, live } = snap;
   const preflight = preflightOf(snap);
   if (!grant || !wallet || !enrollment || !preflight) {
     return (
@@ -155,7 +155,7 @@ export function VerifyPage() {
             onDecide={(choice) => void act(() => api.decide(live.runId, choice))}
           />
         ) : (
-          <LiveWaiting connector={connector} agentName={enrollment.agentName} />
+          <p className="lv-muted" role="status">Waiting for a payment request.</p>
         )}
 
         <p className="vp-status" role="status" aria-live="polite">

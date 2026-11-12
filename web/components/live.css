@@ -118,27 +118,6 @@
   color: var(--error);
 }
 
-/* ---------- Waiting ---------- */
-
-.lv-waiting {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 22px;
-  border: 1px dashed var(--line-strong);
-  border-radius: 16px;
-}
-
-.lv-waiting-title {
-  margin: 0 0 4px;
-  font: 650 1.35rem/1.2 var(--font-display);
-}
-
-.lv-waiting p {
-  margin: 0;
-  line-height: 1.5;
-}
-
 /* ---------- The run ---------- */
 
 .lv-run {

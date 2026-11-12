@@ -3,7 +3,6 @@
 import {
   fmtMoney,
   fmtUsd,
-  type ConnectorView,
   type EnrollmentView,
   type GrantView,
   type LiveRunView,
@@ -327,24 +326,5 @@ function ReceiptFact({ label, value }: { readonly label: string; readonly value:
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
-  );
-}
-
-/** Nothing has arrived yet: say so, and say when the connector last heard from a client. */
-export function LiveWaiting({ connector, agentName }: { readonly connector: ConnectorView | null; readonly agentName: string }) {
-  return (
-    <section className="lv-waiting" aria-label="Waiting for a request" aria-live="polite">
-      <div>
-        <h2 className="lv-waiting-title">Waiting for {agentName}</h2>
-        <p className="lv-muted">
-          A request appears here when the agent platform starts one through the connector.{' '}
-          {connector === null
-            ? 'This server is not serving the connector.'
-            : connector.lastCallAt === null
-              ? 'No client has called yet.'
-              : `Last call: ${connector.lastTool ?? 'a tool'} at ${clock(connector.lastCallAt)}.`}
-        </p>
-      </div>
-    </section>
   );
 }
