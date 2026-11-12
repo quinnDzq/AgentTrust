@@ -1,0 +1,14 @@
+# dependencies
+node_modules
+
+# Next.js: the dev build, the static export, generated types
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+
+.DS_Store

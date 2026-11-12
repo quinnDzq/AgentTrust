@@ -1,0 +1,10 @@
+.env
+.env.*
+!/.env.example
+.paypal-sandbox/
+*.local.json
+*.pem
+*.key
+*.sqlite*
+/app/reference/
+.DS_Store

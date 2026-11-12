@@ -1,0 +1,706 @@
+/*
+ * The live view. It shares the PayPal page's stage (verify.css) and adds the
+ * four things a run is made of: the request, three layers, and a receipt.
+ *
+ * The two surfaces keep the meaning they have everywhere else in AgentTrust.
+ * The dark screen is inside the gateway, where a layer is still being worked
+ * out. Paper is what gets written down and handed over: the agent's
+ * certificate and the receipt.
+ */
+
+.lv-main {
+  max-width: 760px;
+}
+
+.lv-muted {
+  color: var(--ink-muted);
+}
+
+/* Testnet evidence has its own label and colour. */
+.vp-tag-testnet {
+  color: #7fd3c9;
+}
+
+/* ---------- Preflight ---------- */
+
+.lv-preflight {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.lv-preflight[data-ready='yes'] {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-raised);
+}
+
+.lv-preflight summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.lv-preflight summary::-webkit-details-marker {
+  display: none;
+}
+
+.lv-preflight-sum {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.lv-preflight[data-ready='yes'] .lv-checks {
+  margin-top: 12px;
+}
+
+.lv-checks {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lv-check {
+  display: grid;
+  grid-template-columns: 22px minmax(120px, 190px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-sunk);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.lv-check-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--check, var(--ink-muted)) 18%, transparent);
+  color: var(--check, var(--ink-muted));
+  font: 700 13px/1 var(--font-mono);
+}
+
+.lv-check[data-state='ok'],
+.lv-preflight[data-ready='yes'] summary {
+  --check: var(--ok);
+}
+
+.lv-check[data-state='todo'] {
+  --check: var(--pending);
+}
+
+.lv-check[data-state='problem'] {
+  --check: var(--error);
+}
+
+.lv-check-label {
+  font-weight: 700;
+}
+
+.lv-check-detail {
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.lv-check[data-state='problem'] .lv-check-detail {
+  color: var(--error);
+}
+
+/* ---------- Waiting ---------- */
+
+.lv-waiting {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 16px;
+}
+
+.lv-waiting-title {
+  margin: 0 0 4px;
+  font: 650 1.35rem/1.2 var(--font-display);
+}
+
+.lv-waiting p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ---------- The run ---------- */
+
+.lv-run {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg-raised);
+}
+
+.lv-request {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+}
+
+.lv-request-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.lv-amount {
+  margin: 2px 0;
+  font: 700 clamp(1.7rem, 4vw, 2.3rem)/1.05 var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.lv-request .vp-order {
+  font-size: 0.95rem;
+}
+
+.lv-layer {
+  display: grid;
+  gap: 12px;
+  padding: 16px 22px;
+  border-top: 1px dashed var(--line-strong);
+  scroll-margin: 12px;
+  animation: vp-rise 320ms ease both;
+}
+
+/* The layer the run is at carries the gate's lamp colour down its edge. */
+.lv-layer[data-active='yes'] {
+  box-shadow: inset 3px 0 var(--mark, var(--pending));
+}
+
+.lv-layer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.lv-layer-title {
+  margin: 0;
+  font: 700 1rem/1.2 var(--font-body);
+}
+
+.lv-layer-head .vp-mark {
+  margin-left: auto;
+}
+
+.lv-headline {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.lv-layer[data-mark='wait'] .lv-headline,
+.lv-layer[data-mark='off'] .lv-headline {
+  color: var(--ink-muted);
+}
+
+/* ---------- Layer 1: the challenge and the reply ---------- */
+
+.lv-evidence {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.lv-evidence dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--ink-muted);
+  font: 600 12px/1.4 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lv-evidence dd {
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+.lv-count {
+  padding: 1px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--ink);
+  font: 500 12px/1.5 var(--font-mono);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.lv-reply {
+  max-height: 10.6em;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--screen);
+  color: var(--ink);
+  font: 400 12.5px/1.5 var(--font-mono);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  transition: max-height 240ms ease;
+}
+
+.lv-reply[data-open='no'] {
+  max-height: 4.6em;
+}
+
+.lv-candidates {
+  display: grid;
+  gap: 8px;
+}
+
+.lv-candidates-head {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.lv-candidates ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lv-candidates li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(90px, 1fr) 3.2em;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-muted);
+  font-size: 0.88rem;
+}
+
+.lv-candidates li[data-closest='yes'] {
+  color: var(--ink);
+}
+
+.lv-cand-name em {
+  color: var(--ink-muted);
+  font-style: normal;
+}
+
+.lv-bar {
+  position: relative;
+  height: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--screen);
+}
+
+.lv-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ink-muted);
+}
+
+.lv-candidates li[data-closest='yes'] .lv-bar i {
+  background: var(--mark, var(--gold));
+}
+
+/* The calibrated threshold: a tick the bar has to reach. */
+.lv-bar b {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--gold);
+}
+
+.lv-cand-score {
+  font: 500 13px/1 var(--font-mono);
+  text-align: right;
+}
+
+/* ---------- Layer 2: the certificate, on paper ---------- */
+
+.lv-certificate {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--paper-edge);
+  background: var(--paper);
+  box-shadow:
+    0 3px var(--paper-edge),
+    3px 6px var(--screen);
+  color: var(--paper-ink);
+}
+
+.lv-certificate[data-sealed='yes'] {
+  animation: lv-seal 420ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes lv-seal {
+  from {
+    transform: translateY(8px) scale(0.985);
+    box-shadow:
+      0 0 var(--paper-edge),
+      0 0 var(--screen);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.lv-certificate-title {
+  margin: 0;
+  padding: 10px 16px 9px;
+  border-bottom: 1px dashed var(--paper-edge);
+  color: var(--paper-muted);
+  font: 400 10px/1.4 var(--font-pixel);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lv-cert-row {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  --cert: var(--paper-muted);
+}
+
+.lv-cert-row + .lv-cert-row {
+  border-top: 1px dashed var(--paper-edge);
+}
+
+.lv-cert-row[data-mark='pass'] {
+  --cert: var(--paper-ok);
+}
+
+.lv-cert-row[data-mark='fail'] {
+  --cert: var(--paper-error);
+}
+
+.lv-cert-row[data-mark='ask'] {
+  --cert: var(--paper-gold);
+}
+
+.lv-cert-row[data-mark='wait'] {
+  --cert: var(--paper-pending);
+}
+
+.lv-cert-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--cert);
+  font: 700 clamp(1.05rem, 2.4vw, 1.3rem)/1.2 var(--font-display);
+}
+
+.lv-cert-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid currentColor;
+  font: 700 15px/1 var(--font-mono);
+}
+
+/* On paper the honesty tags take ink strength, like every other lamp colour. */
+.lv-certificate .vp-tag,
+.lv-receipt .vp-tag {
+  color: var(--paper-muted);
+  font-family: var(--font-mono);
+}
+
+.lv-cert-detail {
+  margin: 0;
+  color: var(--paper-ink);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.lv-facts {
+  display: grid;
+  gap: 3px;
+  margin: 2px 0 0;
+}
+
+.lv-facts > div {
+  display: grid;
+  grid-template-columns: 9.5em minmax(0, 1fr);
+  gap: 10px;
+}
+
+.lv-facts dt {
+  color: var(--paper-muted);
+  font-size: 0.85rem;
+}
+
+.lv-facts dd {
+  margin: 0;
+  font: 500 0.85rem/1.5 var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.lv-facts a {
+  color: var(--paper-pending);
+}
+
+/* ---------- Layer 3: one line ---------- */
+
+.lv-authorization {
+  margin: 0;
+  color: var(--mark, var(--ink));
+  font: 700 clamp(1.1rem, 2.6vw, 1.4rem)/1.3 var(--font-display);
+}
+
+/* Not reached yet: said plainly, at reading size. The line earns its weight when there is a result. */
+.lv-layer[data-mark='wait'] .lv-authorization,
+.lv-layer[data-mark='off'] .lv-authorization {
+  color: var(--ink-muted);
+  font: 400 1rem/1.45 var(--font-body);
+}
+
+/* ---------- The receipt, on paper ---------- */
+
+.lv-receipt {
+  display: grid;
+  gap: 8px;
+  margin: 4px 22px 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--paper-edge);
+  background: var(--paper);
+  box-shadow:
+    0 3px var(--paper-edge),
+    3px 6px var(--screen);
+  color: var(--paper-ink);
+  scroll-margin: 12px;
+  animation: vp-rise 320ms ease both;
+  --tone: var(--paper-pending);
+}
+
+.lv-receipt[data-tone='ok'] {
+  --tone: var(--paper-ok);
+}
+
+.lv-receipt[data-tone='error'] {
+  --tone: var(--paper-error);
+}
+
+.lv-receipt[data-tone='sim'] {
+  --tone: var(--paper-muted);
+}
+
+.lv-receipt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--paper-edge);
+}
+
+.lv-receipt-provider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font: 700 1.15rem/1.2 var(--font-display);
+}
+
+.lv-receipt-status {
+  padding: 6px 10px 5px;
+  border: 3px solid currentColor;
+  color: var(--tone);
+  font: 400 11px/1 var(--font-pixel);
+  letter-spacing: 0.04em;
+  transform: rotate(-4deg);
+  animation: vp-stamp 260ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.lv-receipt-amount {
+  margin: 4px 0 0;
+  font: 700 clamp(1.5rem, 3.6vw, 2rem)/1.1 var(--font-display);
+}
+
+.lv-receipt-note {
+  margin: 0;
+  color: var(--paper-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.lv-receipt-budget {
+  margin: 4px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--paper-edge);
+  font-weight: 700;
+}
+
+.lv-note {
+  margin: 0;
+  padding: 0 22px 18px;
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+}
+
+/* ---------- Layer 2, opened up ---------- */
+
+.lv-identity {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-raised);
+}
+
+.lv-identity-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.lv-identity-mode {
+  margin: 0;
+  font-weight: 650;
+}
+
+.lv-identity-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.lv-identity code,
+.lv-signed code,
+.lv-proof code {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  font-size: 0.85rem;
+}
+
+.lv-identity .vp-btn,
+.lv-signed .vp-btn {
+  min-height: 44px;
+}
+
+.lv-proof {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.lv-proof[data-verified='yes'] {
+  border-color: var(--ok);
+}
+
+.lv-proof[data-verified='no'] {
+  border-color: var(--error);
+}
+
+.lv-proof-result {
+  margin: 0;
+  font-weight: 650;
+}
+
+.lv-proof[data-verified='yes'] .lv-proof-result {
+  color: var(--ok);
+}
+
+.lv-proof[data-verified='no'] .lv-proof-result,
+.lv-verify[data-verified='no'] {
+  color: var(--error);
+}
+
+.lv-proof-note,
+.lv-verify {
+  margin: 0;
+}
+
+.lv-verify[data-verified='yes'] {
+  color: var(--ok);
+  font-weight: 650;
+}
+
+.lv-signed {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ---------- A phone ---------- */
+
+@media (max-width: 639px) {
+  .lv-request,
+  .lv-layer {
+    padding: 14px 16px;
+  }
+
+  .lv-request {
+    flex-wrap: wrap;
+  }
+
+  .lv-receipt {
+    margin: 4px 16px 16px;
+  }
+
+  .lv-check {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+  }
+
+  .lv-check-detail {
+    grid-column: 2 / -1;
+  }
+
+  /* The row's one action sits under its detail, not in the mark's narrow column. */
+  .lv-check > .vp-btn {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .lv-identity .vp-step-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lv-identity .vp-btn {
+    width: 100%;
+  }
+
+  .lv-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-layer,
+  .lv-receipt,
+  .lv-receipt-status,
+  .lv-certificate[data-sealed='yes'] {
+    animation: none;
+  }
+
+  .lv-reply {
+    transition: none;
+  }
+}

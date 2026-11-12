@@ -1,0 +1,25 @@
+{
+  "name": "agenttrust",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --env-file=../.env run server.ts",
+    "signer": "bun --env-file=../.env run signer.ts",
+    "keys": "bun run scripts/keys.ts",
+    "calibrate": "bun --env-file=../.env run scripts/calibrate.ts",
+    "erc8004": "bun --env-file=../.env run scripts/erc8004.ts",
+    "test": "bun test",
+    "check": "bunx tsc --noEmit"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^21.0.4",
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/bun": "latest",
+    "happy-dom": "^21.0.4",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "^4.2.0"
+  }
+}
